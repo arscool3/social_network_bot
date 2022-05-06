@@ -2,7 +2,7 @@ import asyncio
 import json
 
 from bot.utils import get_aiohttp_session
-from bot.bot_actions import bot_login, bot_registry, bot_add_likes_factory, bot_create_post_factory, get_number_of_posts
+from bot.bot_actions import bot_login, bot_registry, bot_add_likes_factory, bot_create_posts_factory, get_number_of_posts
 
 
 async def read_config():
@@ -23,7 +23,7 @@ async def bot(max_posts, max_likes):
     await anonymous_session.close()
 
     user_session = await get_aiohttp_session(tokens)
-    await bot_create_post_factory(web_url, max_posts, user_session)
+    await bot_create_posts_factory(web_url, max_posts, user_session)
 
     number_of_posts = await get_number_of_posts(web_url, user_session)
 

@@ -38,7 +38,7 @@ async def bot_login(web_url: str, token_data: t.Dict, session: aiohttp.ClientSes
         raise exc.SocialNetworkApiException('Api does not work')
 
 
-async def bot_create_post_factory(web_url: str, max_posts: int, session: aiohttp.ClientSession):
+async def bot_create_posts_factory(web_url: str, max_posts: int, session: aiohttp.ClientSession):
 
     bot_create_posts_tasks = []
     for _ in range(random.randint(1, max_posts)):
