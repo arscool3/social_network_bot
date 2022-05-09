@@ -2,11 +2,13 @@ import asyncio
 import json
 
 from bot.utils import get_aiohttp_session
-from bot.bot_actions import bot_login, bot_registry, bot_add_likes_factory, bot_create_posts_factory, get_number_of_posts
+from bot.bot_actions import bot_login, bot_registry, bot_add_likes_factory, bot_create_posts_factory, \
+    get_number_of_posts
+from bot.client import Client, UserRegistry
+from bot.utils import get_random_str
 
 
 async def read_config():
-
     with open('config.json') as config_json:
         config = json.load(config_json)
         config_json.close()
@@ -33,17 +35,30 @@ async def bot(max_posts, max_likes):
 
 
 async def bot_factory():
-    config = await read_config()
+    # config = await read_config()
+    #
+    # number_of_user = config.get('number_of_user')
+    # max_posts_per_user = config.get('max_posts_per_user')
+    # max_likes_per_user = config.get('max_likes_per_user')
+    #
+    # bot_tasks = []
+    # for _ in range(number_of_user):
+    #     bot_tasks.append(asyncio.create_task(bot(max_posts_per_user, max_likes_per_user)))
+    # await asyncio.gather(*bot_tasks)
 
-    number_of_user = config.get('number_of_user')
-    max_posts_per_user = config.get('max_posts_per_user')
-    max_likes_per_user = config.get('max_likes_per_user')
+    login = await get_random_str(15)
+    password = await get_random_str(15)
+    session = await get_aiohttp_session(tokens={})
+    client_registry = UserRegistry(session=session,
+                                   url="http://127.0.0.1:8000/api/register/",
+                                   data={'username': login,
+                                         'password': password,
+                                         'email': f'{login}@gmail.com'}
+                                   )
+    client = Client(action=client_registry)
+    await client.request()
 
-    bot_tasks = []
-    for _ in range(number_of_user):
-        bot_tasks.append(asyncio.create_task(bot(max_posts_per_user, max_likes_per_user)))
-    await asyncio.gather(*bot_tasks)
+    await session.close()
 
 
 asyncio.run(bot_factory())
-

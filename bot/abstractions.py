@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 
 
-class Client(ABC):
+class ClientAction(ABC):
     @abstractmethod
-    def request(self):
+    async def request(self):
         pass
