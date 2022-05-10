@@ -4,8 +4,9 @@ import json
 from bot.utils import get_aiohttp_session
 from bot.bot_actions import bot_login, bot_registry, bot_add_likes_factory, bot_create_posts_factory, \
     get_number_of_posts
-from bot.client import Client, UserRegistry
+from bot.client import Client, PostAction
 from bot.utils import get_random_str
+from bot.bot import Bot
 
 
 async def read_config():
@@ -46,19 +47,21 @@ async def bot_factory():
     #     bot_tasks.append(asyncio.create_task(bot(max_posts_per_user, max_likes_per_user)))
     # await asyncio.gather(*bot_tasks)
 
-    login = await get_random_str(15)
-    password = await get_random_str(15)
-    session = await get_aiohttp_session(tokens={})
-    client_registry = UserRegistry(session=session,
-                                   url="http://127.0.0.1:8000/api/register/",
-                                   data={'username': login,
-                                         'password': password,
-                                         'email': f'{login}@gmail.com'}
-                                   )
-    client = Client(action=client_registry)
-    await client.request()
+    # login = await get_random_str(15)
+    # password = await get_random_str(15)
+    # session = await get_aiohttp_session(tokens={})
+    # client_registry = PostAction(session=session,
+    #                              url="http://127.0.0.1:8000/api/register/",
+    #                              data={'username': login,
+    #                                    'password': password,
+    #                                    'email': f'{login}@gmail.com'}
+    #                              )
+    # client = Client(action=client_registry)
+    # await client.request()
+    #
+    # await session.close()
 
-    await session.close()
-
+    bot = Bot(1, 1, 1)
+    await bot.create_users()
 
 asyncio.run(bot_factory())

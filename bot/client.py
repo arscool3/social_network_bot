@@ -25,7 +25,8 @@ class Client:
         except ServerConnectionError:
             raise exc.SocialNetworkApiException('Api does not work')
 
-class UserRegistry(ClientAction):
+
+class PostAction(ClientAction):
     def __init__(self,
                  session: aiohttp.ClientSession,
                  url: str,
