@@ -6,7 +6,7 @@ import aiohttp
 from aiohttp.client_exceptions import ServerConnectionError
 
 import bot.exceptions as exc
-from bot.utils import get_random_str
+# from bot.utils import get_random_str
 
 
 async def bot_registry(web_url: str, session: aiohttp.ClientSession) -> t.Dict:

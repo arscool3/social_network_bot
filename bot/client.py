@@ -31,7 +31,7 @@ class Client:
     async def request(self):
         try:
             response = await self._action.request()
-            print(response)
+            # print(response)
             return response
         except ServerConnectionError:
             raise exc.SocialNetworkApiException('Api does not work')
@@ -48,5 +48,18 @@ class PostAction(ClientAction):
 
     async def request(self):
         response = await self.session.post(self.url, data=self.data)
+        json_response = await response.json()
+        return json_response
+
+
+class GetAction(ClientAction):
+    def __init__(self,
+                 session: aiohttp.ClientSession,
+                 url: str):
+        self.session = session
+        self.url = url
+
+    async def request(self):
+        response = await self.session.get(self.url)
         json_response = await response.json()
         return json_response

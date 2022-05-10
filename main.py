@@ -5,7 +5,7 @@ from bot.utils import get_aiohttp_session
 from bot.bot_actions import bot_login, bot_registry, bot_add_likes_factory, bot_create_posts_factory, \
     get_number_of_posts
 from bot.client import Client, PostAction
-from bot.utils import get_random_str
+# from bot.utils import get_random_str
 from bot.bot import Bot
 
 
@@ -61,7 +61,7 @@ async def bot_factory():
     #
     # await session.close()
 
-    bot = Bot(1, 1, 1)
+    bot = Bot(10, 1, 1)
     await bot.create_users()
 
 asyncio.run(bot_factory())
