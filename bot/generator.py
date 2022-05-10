@@ -14,21 +14,27 @@ class RandomGenerator:
 
     @property
     def login(self):
-        login = self.get_random_str(self.size)
-        return login
+        return self.get_random_str(self.size)
 
     @property
     def password(self):
-        password = self.get_random_str(self.size)
-        return password
+        return self.get_random_str(self.size)
 
     @property
     def title(self):
-        title = self.get_random_str(self.size)
-        return title
+        return self.get_random_str(self.size)
 
-    def post_number(self, number_of_posts):
+    @staticmethod
+    def post_number(number_of_posts: int):
         return random.randint(1, number_of_posts)
+
+    @staticmethod
+    def number_of_posts(max_posts: int):
+        return random.randint(1, max_posts)
+
+    @staticmethod
+    def number_of_likes(max_likes: int):
+        return random.randint(1, max_likes)
 
     @staticmethod
     def get_random_str(n: int):

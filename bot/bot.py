@@ -1,8 +1,5 @@
-import random
 import asyncio
-import time
-
-import aiohttp
+import typing as t
 
 from bot.utils import get_aiohttp_session
 from bot.client import Client, PostAction, GetAction
@@ -18,23 +15,23 @@ class Bot:
     async def create_users(self):
         user_tasks = []
         for i in range(self.number_of_users):
-
             session = await get_aiohttp_session({})
-
             client = Client(session=session)
-            user = User(random.randint(1, self.max_posts),
-                        random.randint(1, self.max_likes),
-                        client=client,
-                        )  # todo remove logic
+
+            random_generator = RandomGenerator(15)
+
+            user = User(self.max_posts, self.max_likes, client, random_generator)
             user_tasks.append(asyncio.create_task(user.do_actions()))
+
         await asyncio.gather(*user_tasks)
 
 
 class User:
-    def __init__(self, number_of_posts: int, number_of_likes: int, client: Client):
-        self.posts = number_of_posts
-        self.likes = number_of_likes
+    def __init__(self, max_posts: int, max_likes: int, client: Client, random_generator: RandomGenerator):
+        self.posts = RandomGenerator.number_of_posts(max_posts)
+        self.likes = RandomGenerator.number_of_likes(max_likes)
         self._client = client
+        self._random_generator = random_generator
 
     @property
     def client(self):
@@ -46,38 +43,46 @@ class User:
 
     async def do_actions(self):
 
-        print(f"started at {time.strftime('%X')}")
-        random_generator = RandomGenerator(15)
-        login = random_generator.login
-        password = random_generator.password
+        tokens = await self.authenticate()
+        await self.post_authenticate(tokens)
+
+        await self.create_posts_tasks()
+
+        number_of_posts = await self.get_number_of_posts()
+        await self.create_likes_tasks(number_of_posts)
+
+        await self._client.session.close()
+
+    async def authenticate(self):
+        login = self._random_generator.login
+        password = self._random_generator.password
+
         await self.registry(login, password)
         tokens = await self.login(login, password)
 
+        return tokens
+
+    async def post_authenticate(self, tokens: t.Dict):
         await self._client.session.close()
         self._client.session = await get_aiohttp_session(tokens)
 
-        number_of_posts = await self.get_number_of_posts()
-
+    async def create_posts_tasks(self):
         create_posts_tasks = []
         for _ in range(self.posts):
-            create_posts_tasks.append(asyncio.create_task(self.create_posts('abcd')))
+            title = self._random_generator.title
+            create_posts_tasks.append(asyncio.create_task(self.create_posts(title)))
+
         await asyncio.gather(*create_posts_tasks)
 
+    async def create_likes_tasks(self, number_of_posts: int):
         add_likes_tasks = []
         for _ in range(self.likes):
-            add_likes_tasks.append(asyncio.create_task(self.add_likes(number_of_posts)))
+            post_number = self._random_generator.post_number(number_of_posts)
+            add_likes_tasks.append(asyncio.create_task(self.add_likes(post_number)))
 
         await asyncio.gather(*add_likes_tasks)
 
-        await self._client.session.close()
-
-        await asyncio.sleep(5)
-
-        print(f"ended at {time.strftime('%X')}")
-
-
-
-    async def registry(self, login, password):
+    async def registry(self, login: str, password: str):
         action = PostAction(session=self._client.session,
                             url="http://127.0.0.1:8000/api/register/",
                             data={'username': login,
@@ -99,9 +104,9 @@ class User:
                             data={'text': text})
         await self.request(action)
 
-    async def add_likes(self, number_of_posts):
+    async def add_likes(self, post_number):
         action = PostAction(session=self._client.session,
-                            url="http://127.0.0.1:8000/api/posts/10/like/",
+                            url=f"http://127.0.0.1:8000/api/posts/{post_number}/like/",
                             data={})
         await self.request(action)
 

@@ -1,5 +1,6 @@
 import asyncio
 import json
+import logging
 
 from bot.utils import get_aiohttp_session
 from bot.bot_actions import bot_login, bot_registry, bot_add_likes_factory, bot_create_posts_factory, \
@@ -60,8 +61,8 @@ async def bot_factory():
     # await client.request()
     #
     # await session.close()
-
-    bot = Bot(10, 1, 1)
+    logging.basicConfig(level=logging.INFO)
+    bot = Bot(1, 1, 1)
     await bot.create_users()
 
 asyncio.run(bot_factory())

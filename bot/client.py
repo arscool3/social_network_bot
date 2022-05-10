@@ -1,4 +1,5 @@
 import typing as t
+import logging
 
 import aiohttp
 from aiohttp.client_exceptions import ServerConnectionError
@@ -31,8 +32,12 @@ class Client:
     async def request(self):
         try:
             response = await self._action.request()
-            # print(response)
-            return response
+            if response['status'] in (200, 201):
+                logging.info(response['status'])
+            if response['status'] in (400, 401, 404):
+                logging.info(response['json_response'])
+
+            return response['json_response']
         except ServerConnectionError:
             raise exc.SocialNetworkApiException('Api does not work')
 
@@ -49,7 +54,7 @@ class PostAction(ClientAction):
     async def request(self):
         response = await self.session.post(self.url, data=self.data)
         json_response = await response.json()
-        return json_response
+        return {'status': response.status, 'json_response': json_response}
 
 
 class GetAction(ClientAction):
@@ -62,4 +67,4 @@ class GetAction(ClientAction):
     async def request(self):
         response = await self.session.get(self.url)
         json_response = await response.json()
-        return json_response
+        return {'status': response.status, 'json_response': json_response}
