@@ -7,10 +7,11 @@ from bot.generator import RandomGenerator
 
 
 class Bot:
-    def __init__(self, number_of_users: int, max_posts: int, max_likes: int):
+    def __init__(self, number_of_users: int, max_posts: int, max_likes: int, url: str):
         self.number_of_users = number_of_users
         self.max_posts = max_posts
         self.max_likes = max_likes
+        self.url = url
 
     async def create_users(self):
         user_tasks = []
@@ -20,18 +21,20 @@ class Bot:
 
             random_generator = RandomGenerator(15)
 
-            user = User(self.max_posts, self.max_likes, client, random_generator)
+            user = User(self.max_posts, self.max_likes, self.url, client, random_generator)
             user_tasks.append(asyncio.create_task(user.do_actions()))
 
         await asyncio.gather(*user_tasks)
 
 
 class User:
-    def __init__(self, max_posts: int, max_likes: int, client: Client, random_generator: RandomGenerator):
+    def __init__(self, max_posts: int, max_likes: int, url: str, client: Client, random_generator: RandomGenerator):
         self.posts = RandomGenerator.number_of_posts(max_posts)
         self.likes = RandomGenerator.number_of_likes(max_likes)
+        self.url = url
         self._client = client
         self._random_generator = random_generator
+
 
     @property
     def client(self):
@@ -84,7 +87,7 @@ class User:
 
     async def registry(self, login: str, password: str):
         action = PostAction(session=self._client.session,
-                            url="http://127.0.0.1:8000/api/register/",
+                            url=f"{self.url}/api/register/",
                             data={'username': login,
                                   'password': password,
                                   'email': f'{login}@gmail.com'})
@@ -92,7 +95,7 @@ class User:
 
     async def login(self, login, password):
         action = PostAction(session=self._client.session,
-                            url="http://127.0.0.1:8000/api/token/",
+                            url=f"{self.url}/api/token/",
                             data={'username': login,
                                   'password': password})
         response = await self.request(action)
@@ -100,19 +103,19 @@ class User:
 
     async def create_posts(self, text):
         action = PostAction(session=self._client.session,
-                            url="http://127.0.0.1:8000/api/posts/",
+                            url=f"f{self.url}/api/posts/",
                             data={'text': text})
         await self.request(action)
 
     async def add_likes(self, post_number):
         action = PostAction(session=self._client.session,
-                            url=f"http://127.0.0.1:8000/api/posts/{post_number}/like/",
+                            url=f"{self.url}/api/posts/{post_number}/like/",
                             data={})
         await self.request(action)
 
     async def get_number_of_posts(self):
         action = GetAction(session=self._client.session,
-                           url="http://127.0.0.1:8000/api/posts/")
+                           url=f"{self.url}/api/posts/")
         response = await self.request(action)
         return response['count']
 

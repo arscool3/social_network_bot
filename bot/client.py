@@ -34,7 +34,7 @@ class Client:
             response = await self._action.request()
             if response['status'] in (200, 201):
                 logging.info(response['status'])
-            if response['status'] in (400, 401, 404):
+            if response['status'] == 400:
                 logging.info(response['json_response'])
 
             return response['json_response']

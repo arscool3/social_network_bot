@@ -2,11 +2,6 @@ import asyncio
 import json
 import logging
 
-from bot.utils import get_aiohttp_session
-from bot.bot_actions import bot_login, bot_registry, bot_add_likes_factory, bot_create_posts_factory, \
-    get_number_of_posts
-from bot.client import Client, PostAction
-# from bot.utils import get_random_str
 from bot.bot import Bot
 
 
@@ -17,52 +12,17 @@ async def read_config():
     return config
 
 
-async def bot(max_posts, max_likes):
-    web_url = "http://127.0.0.1:8000"
+async def main():
+    config = await read_config()
 
-    anonymous_session = await get_aiohttp_session({})
-    token_data = await bot_registry(web_url, anonymous_session)
-    tokens = await bot_login(web_url, token_data, anonymous_session)
+    number_of_users = config.get('number_of_user')
+    max_posts_per_user = config.get('max_posts_per_user')
+    max_likes_per_user = config.get('max_likes_per_user')
+    url = 'http://127.0.0.1:8000'
 
-    await anonymous_session.close()
-
-    user_session = await get_aiohttp_session(tokens)
-    await bot_create_posts_factory(web_url, max_posts, user_session)
-
-    number_of_posts = await get_number_of_posts(web_url, user_session)
-
-    await bot_add_likes_factory(web_url, number_of_posts, max_likes, user_session)
-
-    await user_session.close()
-
-
-async def bot_factory():
-    # config = await read_config()
-    #
-    # number_of_user = config.get('number_of_user')
-    # max_posts_per_user = config.get('max_posts_per_user')
-    # max_likes_per_user = config.get('max_likes_per_user')
-    #
-    # bot_tasks = []
-    # for _ in range(number_of_user):
-    #     bot_tasks.append(asyncio.create_task(bot(max_posts_per_user, max_likes_per_user)))
-    # await asyncio.gather(*bot_tasks)
-
-    # login = await get_random_str(15)
-    # password = await get_random_str(15)
-    # session = await get_aiohttp_session(tokens={})
-    # client_registry = PostAction(session=session,
-    #                              url="http://127.0.0.1:8000/api/register/",
-    #                              data={'username': login,
-    #                                    'password': password,
-    #                                    'email': f'{login}@gmail.com'}
-    #                              )
-    # client = Client(action=client_registry)
-    # await client.request()
-    #
-    # await session.close()
     logging.basicConfig(level=logging.INFO)
-    bot = Bot(1, 1, 1)
+    bot = Bot(number_of_users, max_posts_per_user, max_likes_per_user, url)
     await bot.create_users()
 
-asyncio.run(bot_factory())
+
+asyncio.run(main())
