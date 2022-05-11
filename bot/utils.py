@@ -23,13 +23,11 @@ async def read_config():
 
 
 async def read_csv(filename: str):
-    data = []
-    with open(filename) as file:
-        csv_reader = csv.DictReader(file)
-        for row in csv_reader:
-            data.append(row)
+    file = open(filename)
+    csv_reader = csv.reader(file)
+    next(csv_reader)
 
-    return data
+    return csv_reader
 
 
 async def get_generator():

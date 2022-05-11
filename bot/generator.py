@@ -3,6 +3,7 @@ import string
 import typing as t
 
 from bot.abstractions import Generator
+from bot.exceptions import NotEnoughDataException
 
 
 class RandomGenerator(Generator):
@@ -21,32 +22,38 @@ class RandomGenerator(Generator):
     def text(self) -> t.Dict:
         return {'text': self.get_random_str(self.size)}
 
-    # @staticmethod
-    # def post_number(number_of_posts: int):
-    #     return random.randint(1, number_of_posts)
-    #
-    # @staticmethod
-    # def number_of_posts(max_posts: int):
-    #     return random.randint(1, max_posts)
-    #
-    # @staticmethod
-    # def number_of_likes(max_likes: int):
-    #     return random.randint(1, max_likes)
-
     @staticmethod
     def get_random_str(n: int):
         return ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(n))
 
 
 class CsvGenerator(Generator):
-    def __init__(self, users_data: t.List, texts: t.List):
-        self._users_data = users_data
-        self._texts = texts
+    def __init__(self, users_data_reader, texts_reader):
+        self._users_data_reader = users_data_reader
+        self._texts_reader = texts_reader
 
     @property
     def user_data(self) -> t.Dict:
-        return random.choice(self._users_data)
+        try:
+            user_data_list = next(self._users_data_reader)
+        except StopIteration:
+            raise NotEnoughDataException('Not enough rows in users_data.csv file')
+        try:
+            return {'username': user_data_list[0],
+                    'password': user_data_list[1],
+                    'email': user_data_list[2],
+                    }
+        except IndexError:
+            raise NotEnoughDataException('Not enough attributes in users_data.csv file')
 
     @property
     def text(self) -> t.Dict:
-        return random.choice(self._texts)
+        try:
+            text_list = next(self._texts_reader)
+        except StopIteration:
+            raise NotEnoughDataException('Not enough rows in texts.csv file')
+        try:
+            return {'text': text_list[0]}
+        except IndexError:
+            raise NotEnoughDataException('Not enough attributes in texts.csv file')
+
