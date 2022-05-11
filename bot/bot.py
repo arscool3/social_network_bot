@@ -1,17 +1,19 @@
 import asyncio
+import random
 import typing as t
 
 from bot.utils import get_aiohttp_session
 from bot.client import Client, PostAction, GetAction
-from bot.generator import RandomGenerator
+from bot.abstractions import Generator
 
 
 class Bot:
-    def __init__(self, number_of_users: int, max_posts: int, max_likes: int, url: str):
+    def __init__(self, number_of_users: int, max_posts: int, max_likes: int, url: str, generator: Generator):
         self.number_of_users = number_of_users
         self.max_posts = max_posts
         self.max_likes = max_likes
         self.url = url
+        self.generator = generator
 
     async def create_users(self):
         user_tasks = []
@@ -19,22 +21,19 @@ class Bot:
             session = await get_aiohttp_session({})
             client = Client(session=session)
 
-            random_generator = RandomGenerator(15)
-
-            user = User(self.max_posts, self.max_likes, self.url, client, random_generator)
+            user = User(self.max_posts, self.max_likes, self.url, client, self.generator)
             user_tasks.append(asyncio.create_task(user.do_actions()))
 
         await asyncio.gather(*user_tasks)
 
 
 class User:
-    def __init__(self, max_posts: int, max_likes: int, url: str, client: Client, random_generator: RandomGenerator):
-        self.posts = RandomGenerator.number_of_posts(max_posts)
-        self.likes = RandomGenerator.number_of_likes(max_likes)
+    def __init__(self, max_posts: int, max_likes: int, url: str, client: Client, generator: Generator):
+        self.posts = random.randint(1, max_posts)
+        self.likes = random.randint(1, max_likes)
         self.url = url
         self._client = client
-        self._random_generator = random_generator
-
+        self._generator = generator
 
     @property
     def client(self):
@@ -57,11 +56,10 @@ class User:
         await self._client.session.close()
 
     async def authenticate(self):
-        login = self._random_generator.login
-        password = self._random_generator.password
 
-        await self.registry(login, password)
-        tokens = await self.login(login, password)
+        user_data = self._generator.user_data
+        await self.registry(user_data)
+        tokens = await self.login(user_data)
 
         return tokens
 
@@ -72,39 +70,36 @@ class User:
     async def create_posts_tasks(self):
         create_posts_tasks = []
         for _ in range(self.posts):
-            title = self._random_generator.title
-            create_posts_tasks.append(asyncio.create_task(self.create_posts(title)))
+            text = self._generator.text
+            create_posts_tasks.append(asyncio.create_task(self.create_posts(text)))
 
         await asyncio.gather(*create_posts_tasks)
 
     async def create_likes_tasks(self, number_of_posts: int):
         add_likes_tasks = []
         for _ in range(self.likes):
-            post_number = self._random_generator.post_number(number_of_posts)
+            post_number = random.randint(1, number_of_posts)
             add_likes_tasks.append(asyncio.create_task(self.add_likes(post_number)))
 
         await asyncio.gather(*add_likes_tasks)
 
-    async def registry(self, login: str, password: str):
+    async def registry(self, user_data: t.Dict):
         action = PostAction(session=self._client.session,
                             url=f"{self.url}/api/register/",
-                            data={'username': login,
-                                  'password': password,
-                                  'email': f'{login}@gmail.com'})
+                            data=user_data)
         await self.request(action)
 
-    async def login(self, login, password):
+    async def login(self, user_data: t.Dict):
         action = PostAction(session=self._client.session,
                             url=f"{self.url}/api/token/",
-                            data={'username': login,
-                                  'password': password})
+                            data=user_data)
         response = await self.request(action)
         return response
 
     async def create_posts(self, text):
         action = PostAction(session=self._client.session,
                             url=f"f{self.url}/api/posts/",
-                            data={'text': text})
+                            data=text)
         await self.request(action)
 
     async def add_likes(self, post_number):
